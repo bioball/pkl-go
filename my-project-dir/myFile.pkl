@@ -1,0 +1,6 @@
+@go.Package { name = "github.com/apple/pkl-go/my-project-dir/myFile" }
+module test
+
+import "../codegen/src/go.pkl"
+
+reg: String

@@ -70,6 +70,7 @@ CONFIGURING OUTPUT PATH
 			fmt.Println(Version)
 			return nil
 		}
+		fmt.Printf("PROJECT DIR IS %s\n", *settings.ProjectDir)
 		evaluator, err := newEvaluator()
 		if err != nil {
 			return fmt.Errorf("failed to create evaluator: %w", err)
@@ -138,7 +139,7 @@ var Version = "development"
 
 func init() {
 	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "" || Version != "development" {
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" || Version != "development" {
 		return
 	}
 	Version = strings.TrimPrefix(info.Main.Version, "v")
@@ -240,6 +241,7 @@ func init() {
 	if err = flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {
 		panic(err)
 	}
+	projectDir = normalizePath(projectDir)
 	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir)
 	if err != nil {
 		panic(err)
@@ -261,8 +263,20 @@ func init() {
 	}
 	if projectDir != "" {
 		settings.ProjectDir = &projectDir
+		fmt.Printf("I'VE SET PROJCET DIR TO %s\n", *settings.ProjectDir)
 	}
 	settings.DryRun = dryRun
+}
+
+func normalizePath(dir string) string {
+	if path.IsAbs(dir) {
+		return dir
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(fmt.Errorf("unable to find CWD: %w", err))
+	}
+	return path.Join(cwd, dir)
 }
 
 func main() {
