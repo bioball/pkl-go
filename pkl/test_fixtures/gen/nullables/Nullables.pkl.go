@@ -8,65 +8,65 @@ import (
 )
 
 type Nullables struct {
-	Res0 *string `pkl:"res0"`
+	Res0 pkl.Option[string] `pkl:"res0"`
 
-	Res1 *string `pkl:"res1"`
+	Res1 pkl.Option[string] `pkl:"res1"`
 
-	Res2 *int `pkl:"res2"`
+	Res2 pkl.Option[int] `pkl:"res2"`
 
-	Res3 *int `pkl:"res3"`
+	Res3 pkl.Option[int] `pkl:"res3"`
 
-	Res4 *int8 `pkl:"res4"`
+	Res4 pkl.Option[int8] `pkl:"res4"`
 
-	Res5 *int8 `pkl:"res5"`
+	Res5 pkl.Option[int8] `pkl:"res5"`
 
-	Res6 *int16 `pkl:"res6"`
+	Res6 pkl.Option[int16] `pkl:"res6"`
 
-	Res7 *int16 `pkl:"res7"`
+	Res7 pkl.Option[int16] `pkl:"res7"`
 
-	Res8 *int32 `pkl:"res8"`
+	Res8 pkl.Option[int32] `pkl:"res8"`
 
-	Res9 *int32 `pkl:"res9"`
+	Res9 pkl.Option[int32] `pkl:"res9"`
 
-	Res10 *uint `pkl:"res10"`
+	Res10 pkl.Option[uint] `pkl:"res10"`
 
-	Res11 *uint `pkl:"res11"`
+	Res11 pkl.Option[uint] `pkl:"res11"`
 
-	Res12 *uint8 `pkl:"res12"`
+	Res12 pkl.Option[uint8] `pkl:"res12"`
 
-	Res13 *uint8 `pkl:"res13"`
+	Res13 pkl.Option[uint8] `pkl:"res13"`
 
-	Res14 *uint16 `pkl:"res14"`
+	Res14 pkl.Option[uint16] `pkl:"res14"`
 
-	Res15 *uint16 `pkl:"res15"`
+	Res15 pkl.Option[uint16] `pkl:"res15"`
 
-	Res16 *uint32 `pkl:"res16"`
+	Res16 pkl.Option[uint32] `pkl:"res16"`
 
-	Res17 *uint32 `pkl:"res17"`
+	Res17 pkl.Option[uint32] `pkl:"res17"`
 
-	Res18 *float64 `pkl:"res18"`
+	Res18 pkl.Option[float64] `pkl:"res18"`
 
-	Res19 *float64 `pkl:"res19"`
+	Res19 pkl.Option[float64] `pkl:"res19"`
 
-	Res20 *bool `pkl:"res20"`
+	Res20 pkl.Option[bool] `pkl:"res20"`
 
-	Res21 *bool `pkl:"res21"`
+	Res21 pkl.Option[bool] `pkl:"res21"`
 
-	Res22 *map[string]string `pkl:"res22"`
+	Res22 pkl.Option[map[string]string] `pkl:"res22"`
 
-	Res23 *map[string]string `pkl:"res23"`
+	Res23 pkl.Option[map[string]string] `pkl:"res23"`
 
-	Res25 *map[*string]*string `pkl:"res25"`
+	Res25 pkl.Option[map[pkl.Option[string]]pkl.Option[string]] `pkl:"res25"`
 
-	Res26 *[]*int `pkl:"res26"`
+	Res26 pkl.Option[[]pkl.Option[int]] `pkl:"res26"`
 
-	Res27 *[]*int `pkl:"res27"`
+	Res27 pkl.Option[[]pkl.Option[int]] `pkl:"res27"`
 
-	Res28 *MyClass `pkl:"res28"`
+	Res28 pkl.Option[*MyClass] `pkl:"res28"`
 
-	Res29 *MyClass `pkl:"res29"`
+	Res29 pkl.Option[*MyClass] `pkl:"res29"`
 
-	Res30 *MyClass `pkl:"res30"`
+	Res30 pkl.Option[*MyClass] `pkl:"res30"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Nullables

@@ -23,7 +23,7 @@ import (
 )
 
 // Unmarshal parses Pkl-encoded data and stores the result into
-// the value pointed by v.
+// the Value pointed by v.
 //
 // This is a low-level API. Most users should be using Evaluator.Evaluate instead.
 //

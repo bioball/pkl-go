@@ -9,10 +9,10 @@ import (
 
 type Bug struct {
 	// The owner of this bug.
-	Owner *Person `pkl:"owner"`
+	Owner pkl.Option[Person] `pkl:"owner"`
 
 	// The age of this bug
-	Age *int `pkl:"age"`
+	Age pkl.Option[int] `pkl:"age"`
 
 	// How long the bug holds its breath for
 	HoldsBreathFor *pkl.Duration `pkl:"holdsBreathFor"`

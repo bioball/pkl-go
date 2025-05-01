@@ -32,7 +32,7 @@ type Collections struct {
 
 	Res12 *pkl.Pair[any, any] `pkl:"res12"`
 
-	Res13 *pkl.Pair[int, *int] `pkl:"res13"`
+	Res13 *pkl.Pair[int, pkl.Option[int]] `pkl:"res13"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Collections

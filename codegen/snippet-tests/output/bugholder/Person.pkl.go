@@ -1,14 +1,16 @@
 // Code generated from Pkl module `org.foo.BugHolder`. DO NOT EDIT.
 package bugholder
 
+import "github.com/apple/pkl-go/pkl"
+
 type Person interface {
 	Being
 
 	GetBike() *Bike
 
-	GetFirstName() *uint16
+	GetFirstName() pkl.Option[uint16]
 
-	GetLastName() map[string]*uint32
+	GetLastName() map[string]pkl.Option[uint32]
 
 	GetThings() map[int]struct{}
 }
@@ -22,10 +24,10 @@ type PersonImpl struct {
 	Bike *Bike `pkl:"bike"`
 
 	// The person's first name
-	FirstName *uint16 `pkl:"firstName"`
+	FirstName pkl.Option[uint16] `pkl:"firstName"`
 
 	// The person's last name
-	LastName map[string]*uint32 `pkl:"lastName"`
+	LastName map[string]pkl.Option[uint32] `pkl:"lastName"`
 
 	Things map[int]struct{} `pkl:"things"`
 }
@@ -39,12 +41,12 @@ func (rcv *PersonImpl) GetBike() *Bike {
 }
 
 // The person's first name
-func (rcv *PersonImpl) GetFirstName() *uint16 {
+func (rcv *PersonImpl) GetFirstName() pkl.Option[uint16] {
 	return rcv.FirstName
 }
 
 // The person's last name
-func (rcv *PersonImpl) GetLastName() map[string]*uint32 {
+func (rcv *PersonImpl) GetLastName() map[string]pkl.Option[uint32] {
 	return rcv.LastName
 }
 

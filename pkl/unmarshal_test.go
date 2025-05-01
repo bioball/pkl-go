@@ -156,9 +156,9 @@ func TestUnmarshall_Collections(t *testing.T) {
 			First:  "hello",
 			Second: "goodbye",
 		},
-		Res13: &pkl.Pair[int, *int]{
+		Res13: &pkl.Pair[int, pkl.Option[int]]{
 			First:  1,
-			Second: &[]int{2}[0],
+			Second: pkl.Some(2),
 		},
 	}
 	if assert.NoError(t, pkl.Unmarshal(collectionsInput, &res)) {
@@ -228,48 +228,50 @@ func TestUnmarshal_DataSize(t *testing.T) {
 func TestUnmarshal_Nullables(t *testing.T) {
 	var res nullables.Nullables
 	expected := nullables.Nullables{
-		Res0:  &[]string{"bar"}[0],
-		Res1:  nil,
-		Res2:  &[]int{1}[0],
-		Res3:  nil,
-		Res4:  &[]int8{2}[0],
-		Res5:  nil,
-		Res6:  &[]int16{3}[0],
-		Res7:  nil,
-		Res8:  &[]int32{4}[0],
-		Res9:  nil,
-		Res10: &[]uint{5}[0],
-		Res11: nil,
-		Res12: &[]uint8{6}[0],
-		Res13: nil,
-		Res14: &[]uint16{7}[0],
-		Res15: nil,
-		Res16: &[]uint32{8}[0],
-		Res17: nil,
-		Res18: &[]float64{5.3}[0],
-		Res19: nil,
-		Res20: &[]bool{true}[0],
-		Res21: nil,
-		Res22: &map[string]string{"foo": "bar"},
-		Res23: nil,
+		Res0:  pkl.Some("bar"),
+		Res1:  pkl.None[string](),
+		Res2:  pkl.Some(1),
+		Res3:  pkl.None[int](),
+		Res4:  pkl.Some[int8](2),
+		Res5:  pkl.None[int8](),
+		Res6:  pkl.Some[int16](3),
+		Res7:  pkl.None[int16](),
+		Res8:  pkl.Some[int32](4),
+		Res9:  pkl.None[int32](),
+		Res10: pkl.Some[uint](5),
+		Res11: pkl.None[uint](),
+		Res12: pkl.Some[uint8](6),
+		Res13: pkl.None[uint8](),
+		Res14: pkl.Some[uint16](7),
+		Res15: pkl.None[uint16](),
+		Res16: pkl.Some[uint32](8),
+		Res17: pkl.None[uint32](),
+		Res18: pkl.Some[float64](5.3),
+		Res19: pkl.None[float64](),
+		Res20: pkl.Some[bool](true),
+		Res21: pkl.None[bool](),
+		Res22: pkl.Some(map[string]string{"foo": "bar"}),
+		Res23: pkl.None[map[string]string](),
 		// can't test this due to https://github.com/stretchr/testify/issues/1143
 		//Res24: &map[*string]*string{
 		//	&[]string{"foo"}[0]:  &[]string{"bar"}[0],
 		//	nil:                  nil,
 		//	&[]string{"foo2"}[0]: nil,
 		//},
-		Res25: nil,
-		Res26: &[]*int{
-			&[]int{1}[0],
-			&[]int{2}[0],
-			nil,
-			&[]int{4}[0],
-			&[]int{5}[0],
-		},
-		Res27: nil,
-		Res28: &nullables.MyClass{Prop: nil},
-		Res29: &nullables.MyClass{Prop: &[]string{"foo"}[0]},
-		Res30: nil,
+		Res25: pkl.None[map[pkl.Option[string]]pkl.Option[string]](),
+		Res26: pkl.Some[[]pkl.Option[int]](
+			[]pkl.Option[int]{
+				pkl.Some(1),
+				pkl.Some(2),
+				pkl.None[int](),
+				pkl.Some(4),
+				pkl.Some(5),
+			},
+		),
+		Res27: pkl.None[[]pkl.Option[int]](),
+		Res28: pkl.Some(&nullables.MyClass{Prop: pkl.None[string]()}),
+		Res29: pkl.Some(&nullables.MyClass{Prop: pkl.Some("foo")}),
+		Res30: pkl.None[*nullables.MyClass](),
 	}
 	if assert.NoError(t, pkl.Unmarshal(nullablesInput, &res)) {
 		assert.Equal(t, expected, res)
@@ -439,5 +441,5 @@ func TestUnmarshal_UnknownType(t *testing.T) {
 	var res unknowntype.UnknownType
 	err := pkl.Unmarshal(unknownType, &res)
 	assert.Error(t, err)
-	assert.Equal(t, "cannot decode Pkl value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`", err.Error())
+	assert.Equal(t, "cannot decode Pkl Value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`", err.Error())
 }

@@ -21,6 +21,7 @@ import (
 	"encoding"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/vmihailenco/msgpack/v5"
@@ -59,9 +60,15 @@ func newDecoder(b []byte, schemas map[string]reflect.Type) *decoder {
 	}
 }
 
-var durationType = reflect.TypeOf(time.Duration(0))
+var durationType = reflect.TypeFor[time.Duration]()
 
-// Decode decodes the next value according to the expected type.
+var optionType = reflect.TypeFor[Option[any]]()
+
+func isOptionType(typ reflect.Type) bool {
+	return typ.PkgPath() == "github.com/apple/pkl-go/pkl" && strings.HasPrefix(typ.Name(), "Option[")
+}
+
+// Decode decodes the next Value according to the expected type.
 func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
 	res, isUnmarshaled, err := d.maybeUnmarshal(typ)
 	if isUnmarshaled {
@@ -71,6 +78,9 @@ func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
 	case reflect.Ptr:
 		return d.decodePointer(typ)
 	case reflect.Struct:
+		if isOptionType(typ) {
+			return d.decodeOptional(typ)
+		}
 		return d.decodeStruct(typ)
 	case reflect.Bool:
 		return d.decodeBool()
@@ -134,6 +144,24 @@ func (d *decoder) decodePointer(inType reflect.Type) (*reflect.Value, error) {
 		return nil, err
 	}
 	ret.Elem().Set(*val)
+	return &ret, nil
+}
+
+func (d *decoder) decodeOptional(inType reflect.Type) (*reflect.Value, error) {
+	code, err := d.dec.PeekCode()
+	ret := reflect.Zero(inType)
+	if code == msgpcode.Nil {
+		if err = d.dec.Skip(); err != nil {
+			return &ret, err
+		}
+	}
+	valueField := ret.FieldByName("Value")
+	val, err := d.Decode(valueField.Type())
+	if err != nil {
+		return nil, err
+	}
+	valueField.Set(*val)
+	ret.FieldByName("Exists").SetBool(true)
 	return &ret, nil
 }
 

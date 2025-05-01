@@ -22,7 +22,7 @@ import (
 	"github.com/apple/pkl-go/pkl/internal"
 )
 
-// needed for mapping Project.RawDependencies, because the value is defined as any.
+// needed for mapping Project.RawDependencies, because the Value is defined as any.
 func init() {
 	RegisterMapping("pkl.Project", Project{})
 	RegisterMapping("pkl.Project#RemoteDependency", ProjectRemoteDependency{})
