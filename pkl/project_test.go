@@ -25,6 +25,7 @@ import (
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const project1Contents = `
@@ -324,9 +325,12 @@ func TestLoadProject(t *testing.T) {
 }
 
 func TestLoadProjectWithProxy(t *testing.T) {
-	t.Skip("native: panic: runtime error: invalid memory address or nil pointer dereference [recovered]")
-
 	manager := NewEvaluatorManager()
+	defer manager.Close()
+
+	_, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	require.Nil(t, err)
+
 	version, err := manager.(*evaluatorManager).getVersion()
 	if err != nil {
 		t.Fatal(err)

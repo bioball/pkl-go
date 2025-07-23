@@ -47,8 +47,6 @@ fibErrNotFound = test.catchOrNull(() -> read("fib:0").text)
 )
 
 func TestExternalReaderE2E(t *testing.T) {
-	t.Skip("native: panic: runtime error: invalid memory address or nil pointer dereference [recovered]")
-
 	manager := NewEvaluatorManager()
 	defer func() { _ = manager.Close() }()
 	version, err := manager.(*evaluatorManager).getVersion()
