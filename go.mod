@@ -3,7 +3,6 @@ module github.com/apple/pkl-go
 go 1.24.0
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 )

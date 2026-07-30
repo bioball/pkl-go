@@ -44,12 +44,12 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"unsafe"
-
-	"github.com/google/uuid"
 )
 
 var handlerMap sync.Map
+var counter atomic.Int64
 
 // MessageHandler is the Go equivalent of PklMessageResponseHandler
 // The userData parameter will be the unsafe.Pointer passed to pkl_init
@@ -74,7 +74,7 @@ type PklClient struct {
 	handler MessageHandler
 	pexec   *C.pkl_exec_t
 
-	id        uuid.UUID
+	id        int64
 	idPointer unsafe.Pointer
 
 	closed bool
@@ -90,11 +90,10 @@ type job struct {
 
 // New initializes the Pkl executor with a Go callback
 func New(handler MessageHandler) (*PklClient, error) {
-	id := uuid.New()
-
+	id := counter.Add(1)
 	client := &PklClient{
 		handler:   handler,
-		id:        id,
+		id:        counter.Add(1),
 		idPointer: unsafe.Pointer(&id),
 		jobs:      make(chan *job),
 		stop:      make(chan struct{}),
