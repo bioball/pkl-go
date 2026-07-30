@@ -16,13 +16,15 @@
 
 //go:build libpkl
 
-package libpkl
+package libpkl_test
 
 import (
 	"bytes"
-	"github.com/vmihailenco/msgpack/v5"
 	"testing"
 	"unsafe"
+
+	"github.com/apple/pkl-go/pkl/internal/libpkl"
+	"github.com/vmihailenco/msgpack/v5"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
 
@@ -38,7 +40,7 @@ func Test_LibPkl_New_Close(t *testing.T) {
 		events <- message
 	}
 
-	c, err := New(testHandler)
+	c, err := libpkl.New(testHandler)
 	require.Nil(t, err, "Failed to start libpkl")
 
 	err = c.Close()
@@ -53,7 +55,7 @@ func Test_LibPkl_SendMessage(t *testing.T) {
 		events <- message
 	}
 
-	c, err := New(testHandler)
+	c, err := libpkl.New(testHandler)
 	require.Nil(t, err, "Failed to start libpkl")
 
 	create := &msgapi.CreateEvaluator{
@@ -81,9 +83,8 @@ func Test_LibPkl_SendMessage(t *testing.T) {
 
 	err = c.SendMessage(createMsg)
 	require.Nil(t, err)
-
-	require.Len(t, events, 1)
-	event, err := decode(<-events)
+	messageBytes := <-events
+	event, err := decode(messageBytes)
 	assert.Nil(t, err, "couldn't deserialize MsgPack")
 	t.Logf("event=%#v\n", event)
 

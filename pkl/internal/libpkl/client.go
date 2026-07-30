@@ -25,11 +25,11 @@ package libpkl
 
 // Bridge function to handle Go callbacks from C
 // This function will be called by the C library and will forward to Go
-void go_pkl_message_handler_bridge(unsigned int length, char *message);
+void go_pkl_message_handler_bridge(unsigned int length, char *message, void *userData);
 
 // Static C function that acts as the bridge to Go
 static void c_pkl_message_handler_bridge(unsigned int length, char *message, void *userData) {
-   go_pkl_message_handler_bridge(length, message);
+   go_pkl_message_handler_bridge(length, message, userData);
 }
 
 // Helper function to get the bridge function pointer

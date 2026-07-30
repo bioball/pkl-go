@@ -26,10 +26,10 @@ import (
 	"unsafe"
 
 	"github.com/apple/pkl-go/pkl/internal"
+	"github.com/apple/pkl-go/pkl/internal/libpkl"
 	"github.com/vmihailenco/msgpack/v5"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
-	"github.com/apple/pkl-go/pkl/libpkl"
 )
 
 var _ evaluatorManagerImpl = (*nativeEvaluator)(nil)
