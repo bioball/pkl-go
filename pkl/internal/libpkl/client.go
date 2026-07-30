@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,23 +42,24 @@ import "C"
 import (
 	"fmt"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"unsafe"
 )
 
-var handlerMap sync.Map
-var counter atomic.Int64
+var (
+	handlerMap sync.Map
+	counter    atomic.Int64
+)
 
 // MessageHandler is the Go equivalent of PklMessageResponseHandler
-// The userData parameter will be the unsafe.Pointer passed to pkl_init
-type MessageHandler func(message []byte, userData unsafe.Pointer)
+type MessageHandler func(message []byte)
 
 //export go_pkl_message_handler_bridge
 //goland:noinspection GoSnakeCaseUsage
 func go_pkl_message_handler_bridge(length C.uint, message *C.char, userData unsafe.Pointer) {
-	handler, exists := handlerMap.Load(userData)
+	id := *(*int64)(userData)
+	handler, exists := handlerMap.Load(id)
 	if !exists {
 		return
 	}
@@ -67,20 +68,21 @@ func go_pkl_message_handler_bridge(length C.uint, message *C.char, userData unsa
 	messageBytes := C.GoBytes(unsafe.Pointer(message), C.int(length))
 
 	// Call the Go handler with the original userData provided by the user
-	handler.(MessageHandler)(messageBytes, userData)
+	handler.(MessageHandler)(messageBytes)
 }
 
+type Id struct {
+	id int64
+}
 type PklClient struct {
 	handler MessageHandler
+	pinner  *runtime.Pinner
 	pexec   *C.pkl_exec_t
-
-	id        int64
-	idPointer unsafe.Pointer
-
-	closed bool
-	mu     sync.Mutex
-	jobs   chan *job
-	stop   chan struct{}
+	id      int64
+	closed  bool
+	mu      sync.Mutex
+	jobs    chan *job
+	stop    chan struct{}
 }
 
 type job struct {
@@ -90,36 +92,35 @@ type job struct {
 
 // New initializes the Pkl executor with a Go callback
 func New(handler MessageHandler) (*PklClient, error) {
+	pinner := &runtime.Pinner{}
 	id := counter.Add(1)
+	idPtr := &id
+	// prevent Go from GC'ing this value
+	pinner.Pin(idPtr)
 	client := &PklClient{
-		handler:   handler,
-		id:        counter.Add(1),
-		idPointer: unsafe.Pointer(&id),
-		jobs:      make(chan *job),
-		stop:      make(chan struct{}),
+		handler: handler,
+		pinner:  pinner,
+		id:      id,
+		jobs:    make(chan *job),
+		stop:    make(chan struct{}),
 	}
 
 	go client.run()
 	var err error
-	j := &job{
-		fn: func() {
-			var cerr C.pkl_error_t
-			var pexec *C.pkl_exec_t
+	client.do(func() {
+		var cerr C.pkl_error_t
+		var pexec *C.pkl_exec_t
 
-			// Call the C function with our bridge handler
-			if ret := C.pkl_init(C.get_bridge_handler(), client.idPointer, &pexec, &cerr); ret != 0 {
-				err = fmt.Errorf("pkl_init failed: %s", pklErrorMessage(&cerr))
-			}
-			client.pexec = pexec
-		},
-		done: make(chan struct{}),
-	}
-	client.jobs <- j
-	<-j.done
+		// Call the C function with our bridge handler
+		if ret := C.pkl_init(C.get_bridge_handler(), unsafe.Pointer(idPtr), &pexec, &cerr); ret != 0 {
+			err = fmt.Errorf("pkl_init failed: %s", pklErrorMessage(&cerr))
+		}
+		client.pexec = pexec
+	})
 	if err != nil {
 		return nil, err
 	}
-	handlerMap.Store(client.idPointer, client.handler)
+	handlerMap.Store(client.id, client.handler)
 
 	return client, nil
 }
@@ -139,6 +140,15 @@ func (c *PklClient) run() {
 	}
 }
 
+func (c *PklClient) do(f func()) {
+	j := &job{
+		fn:   f,
+		done: make(chan struct{}),
+	}
+	c.jobs <- j
+	<-j.done
+}
+
 // SendMessage sends a message to Pkl
 func (c *PklClient) SendMessage(message []byte) error {
 	c.mu.Lock()
@@ -154,20 +164,14 @@ func (c *PklClient) SendMessage(message []byte) error {
 	// Convert Go slice to C data
 	cMessage := C.CBytes(message)
 	defer C.free(cMessage)
-
 	var err error
-	j := &job{
-		fn: func() {
-			var cerr C.pkl_error_t
-			result := C.pkl_send_message(c.pexec, C.uint(len(message)), (*C.char)(cMessage), &cerr)
-			if result != 0 {
-				err = fmt.Errorf("pkl_send_message failed: %s", pklErrorMessage(&cerr))
-			}
-		},
-		done: make(chan struct{}),
-	}
-	c.jobs <- j
-	<-j.done
+	c.do(func() {
+		var cerr C.pkl_error_t
+		result := C.pkl_send_message(c.pexec, C.uint(len(message)), (*C.char)(cMessage), &cerr)
+		if result != 0 {
+			err = fmt.Errorf("pkl_send_message failed: %s", pklErrorMessage(&cerr))
+		}
+	})
 	return err
 }
 
@@ -180,18 +184,12 @@ func (c *PklClient) Close() error {
 		return nil
 	}
 	var err error
-	j := &job{
-		fn: func() {
-			var cerr C.pkl_error_t
-			if ret := C.pkl_close(c.pexec, &cerr); ret != 0 {
-				err = fmt.Errorf("pkl_close failed: %s", pklErrorMessage(&cerr))
-			}
-
-		},
-		done: make(chan struct{}),
-	}
-	c.jobs <- j
-	<-j.done
+	c.do(func() {
+		var cerr C.pkl_error_t
+		if ret := C.pkl_close(c.pexec, &cerr); ret != 0 {
+			err = fmt.Errorf("pkl_close failed: %s", pklErrorMessage(&cerr))
+		}
+	})
 	if err != nil {
 		return err
 	}
@@ -199,6 +197,7 @@ func (c *PklClient) Close() error {
 	c.closed = true
 
 	handlerMap.Delete(c.id)
+	c.pinner.Unpin()
 
 	return nil
 }
@@ -213,6 +212,5 @@ func pklErrorMessage(err *C.pkl_error_t) string {
 }
 
 func Version() string {
-	version := C.GoString(C.pkl_version())
-	return strings.Clone(version)
+	return C.GoString(C.pkl_version())
 }

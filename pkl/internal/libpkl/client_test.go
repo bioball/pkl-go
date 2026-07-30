@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package libpkl_test
 import (
 	"bytes"
 	"testing"
-	"unsafe"
 
 	"github.com/apple/pkl-go/pkl/internal/libpkl"
 	"github.com/vmihailenco/msgpack/v5"
@@ -36,7 +35,7 @@ func Test_LibPkl_New_Close(t *testing.T) {
 	events := make(chan []byte, 10)
 	defer close(events)
 
-	testHandler := func(message []byte, userData unsafe.Pointer) {
+	testHandler := func(message []byte) {
 		events <- message
 	}
 
@@ -51,7 +50,7 @@ func Test_LibPkl_SendMessage(t *testing.T) {
 	events := make(chan []byte, 10)
 	defer close(events)
 
-	testHandler := func(message []byte, userData unsafe.Pointer) {
+	testHandler := func(message []byte) {
 		events <- message
 	}
 

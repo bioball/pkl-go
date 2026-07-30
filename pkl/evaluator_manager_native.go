@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"sync"
-	"unsafe"
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/libpkl"
@@ -135,7 +134,7 @@ func (n *nativeEvaluator) handleSendMessages() {
 	}
 }
 
-func (n *nativeEvaluator) responseHandler(message []byte, userData unsafe.Pointer) {
+func (n *nativeEvaluator) responseHandler(message []byte) {
 	r := bytes.NewBuffer(message)
 	dec := msgpack.NewDecoder(r)
 
@@ -148,6 +147,5 @@ func (n *nativeEvaluator) responseHandler(message []byte, userData unsafe.Pointe
 		n.closed <- &InternalError{err: err}
 		return
 	}
-	internal.Debug("Received message: %#v userData=%#v", msg, userData)
 	n.in <- msg
 }
