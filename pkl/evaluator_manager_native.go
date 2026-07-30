@@ -21,11 +21,12 @@ package pkl
 import (
 	"bytes"
 	"fmt"
-	"github.com/apple/pkl-go/pkl/internal"
-	"github.com/vmihailenco/msgpack/v5"
 	"io"
 	"sync"
 	"unsafe"
+
+	"github.com/apple/pkl-go/pkl/internal"
+	"github.com/vmihailenco/msgpack/v5"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
 	"github.com/apple/pkl-go/pkl/libpkl"
@@ -61,13 +62,13 @@ type nativeEvaluator struct {
 
 	// exited is a flag that indicates evaluator was closed explicitly
 	exited  atomicBool
-	version *semver
+	version *internal.Semver
 }
 
 func (n *nativeEvaluator) init() error {
 	c, err := libpkl.New(n.responseHandler)
 	if err != nil {
-		panic(fmt.Sprintf("Couldn't initialise libpkl C bindings: %e", err))
+		return fmt.Errorf("failed to initialize libpkl: %w", err)
 	}
 
 	n.client = c
@@ -98,13 +99,13 @@ func (n *nativeEvaluator) outChan() chan msgapi.OutgoingMessage { return n.out }
 
 func (n *nativeEvaluator) closedChan() chan error { return n.closed }
 
-func (n *nativeEvaluator) getVersion() (*semver, error) {
+func (n *nativeEvaluator) getVersion() (*internal.Semver, error) {
 	if n.exited.get() {
 		return nil, fmt.Errorf("evaluator is closed")
 	}
 
 	version := libpkl.Version()
-	parsed, err := parseSemver(version)
+	parsed, err := internal.ParseSemver(version)
 	if err != nil {
 		return nil, err
 	}

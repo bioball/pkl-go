@@ -20,7 +20,9 @@ package pkl
 
 import (
 	"context"
-	"path/filepath"
+	"fmt"
+	"net/url"
+	"strings"
 )
 
 // NewEvaluator returns an evaluator backed by a single EvaluatorManager.
@@ -44,16 +46,31 @@ func NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) 
 //
 // When using project dependencies, they must first be resolved using the `pkl project resolve`
 // CLI command.
-func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	// enforced by Pkl: `file` URIs must conform to RFC-8089.
+	// Pkl currently throws PklBugException if passing a file URI without a path
+	if projectBaseUrl.Scheme == "file" {
+		if !strings.HasPrefix(projectBaseUrl.Path, "/") {
+			return nil, fmt.Errorf(
+				"projectBaseUrl is an invalid file URI: file URIs must have a path component that starts with `/` (e.g. file:///path/to/project). Got: %q",
+				projectBaseUrl,
+			)
+		}
+	}
 	manager := NewEvaluatorManager()
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
-	defer projectEvaluator.Close()
+	defer func() {
+		cerr := projectEvaluator.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
 
-	projectPath := filepath.Join(projectDir, "PklProject")
-	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, projectPath)
+	projectPath := projectBaseUrl.JoinPath("PklProject")
+	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectPath})
 	if err != nil {
 		return nil, err
 	}
