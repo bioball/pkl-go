@@ -36,6 +36,14 @@ Example:
 go build main.go -tags libpkl
 ----
 
+By default, this links to the shared library.
+To link to the static library, add tag `libpkl_static`:
+
+[source,shell]
+----
+go build main.go -tags libpkl,libpkl_static
+----
+
 == Initializing an evaluator
 
 There are two methods for initializing a `pkl.Evaluator`:

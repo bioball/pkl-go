@@ -19,7 +19,8 @@
 package libpkl
 
 /*
-#cgo pkg-config: libpkl
+#cgo !libpkl_static pkg-config: libpkl
+#cgo libpkl_static pkg-config: libpkl-static
 #include <stdlib.h>
 #include <pkl.h>
 
